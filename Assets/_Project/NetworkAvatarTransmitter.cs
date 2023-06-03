@@ -1,3 +1,4 @@
+using Oculus.Avatar2;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static Oculus.Avatar2.OvrAvatarEntity;
 
-public class NetworkAvatarInitializer
+public class NetworkPlayerInitializer
 {
     private LocalPlayerRoot _localPlayerRoot;
 
@@ -27,8 +28,38 @@ public class NetworkAvatarInitializer
     }
 }
 
+public class NetworkPlayerEventsMediator
+{
+    public event Action<NetworkAvatarTransmitter> LocalPlayerAvatarTransmitterSpawned;
+    public event Action<NetworkPlayerPositionSynchronizer> LocalPlayerPositionSynchronizerSpawned;
+
+    public void RegisterListeners()
+    {
+        NetworkAvatarTransmitter.LocalPlayerAvatarTransmitterSpawned += OnCurrentUserNetworkAvatarSpawned;
+        NetworkPlayerPositionSynchronizer.LocalPlayerPositionSynchronizerSpawned += OnLocalPlayerPositionSynchronizerSpawned;
+    }
+
+    public void UnregisterListeners()
+    {
+        NetworkAvatarTransmitter.LocalPlayerAvatarTransmitterSpawned += OnCurrentUserNetworkAvatarSpawned;
+        NetworkPlayerPositionSynchronizer.LocalPlayerPositionSynchronizerSpawned += OnLocalPlayerPositionSynchronizerSpawned;
+    }
+
+    private void OnCurrentUserNetworkAvatarSpawned(NetworkAvatarTransmitter avatarTransmitter)
+    {
+        LocalPlayerAvatarTransmitterSpawned?.Invoke(avatarTransmitter);
+    }
+
+    private void OnLocalPlayerPositionSynchronizerSpawned(NetworkPlayerPositionSynchronizer playerPositionSynchronizer)
+    {
+        LocalPlayerPositionSynchronizerSpawned?.Invoke(playerPositionSynchronizer);
+    }
+}
+
 public class NetworkAvatarTransmitter : NetworkBehaviour
 {
+    //private static readonly float[] StreamLodSnapshotIntervalSeconds = new float[OvrAvatarEntity.StreamLODCount] { 1f / 72, 2f / 72, 3f / 72, 4f / 72 };
+
     [SerializeField]
     private SampleAvatarEntity _remoteAvatar;
 
@@ -38,19 +69,19 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
     public static event Action<NetworkAvatarTransmitter> LocalPlayerAvatarTransmitterSpawned;
 
-    void Update()
-    {
-        
-    }
+    //private void Awake()
+    //{
+    //    AvatarLODManager.Instance.enableDynamicStreaming = true;
+    //}
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
-        if (IsServer)
-        {
-            return;
-        }
+        //if (IsServer)
+        //{
+        //    return;
+        //}
 
         if (IsOwner)
         {
@@ -58,7 +89,7 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
             //SendBaseAvatarDataServerRpc();
             //StartCoroutine(SendingAvatarPoseData);
         }
-        else
+        else if (IsClient)
         {
             RequestBaseAvatarDataServerRpc(NetworkManager.LocalClientId);
         }
@@ -72,6 +103,8 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
     public void Init(SampleAvatarEntity localAvatar, int assetId)
     {
         _localAvatar = localAvatar;
+        _localAvatar.ReloadAvatarManually(assetId.ToString(), SampleAvatarEntity.AssetSource.Zip);
+        //_remoteAvatar.Hidden = true;
         LoadDefaultRemoteAvatar(assetId);
 
         _baseAvatarData = new()
@@ -81,13 +114,14 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
             rotation = localAvatar.transform.rotation,
         };
 
-        StartCoroutine(WaitingForTrackingPoseValid());
+        SendBaseAvatarDataServerRpc(_baseAvatarData);
+        //StartCoroutine(WaitingForTrackingPoseValid());
         StartCoroutine(AvatarDataTransmissionRoutine());
     }
 
     private IEnumerator AvatarDataTransmissionRoutine()
     {
-        while (_remoteAvatar.SkeletonJointCount == 0)
+        while (!_remoteAvatar.isActiveAndEnabled || _remoteAvatar.SkeletonJointCount == 0)
         {
             yield return null;
         }
@@ -99,7 +133,7 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
         WaitForSeconds sendingDelay = new(2f / NetworkManager.NetworkConfig.TickRate);
         WaitForEndOfFrame endOfFrameDelay = new();
-
+        //Waitfo
         PoseSerializableAvatarData poseData = new();
         poseData.PacketData = new();
 
@@ -107,8 +141,8 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
         {
             yield return sendingDelay;
             yield return endOfFrameDelay;
-
-            if (_remoteAvatar.SkeletonJointCount == 0)
+            //yield return null;
+            if (_localAvatar.SkeletonJointCount == 0 || !_localAvatar.HasJoints)
             {
                 continue;
             }
@@ -120,38 +154,63 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
             poseData.PacketData.lod = StreamLOD.Low;
             poseData.PacketData.data = _localAvatar.RecordStreamData(StreamLOD.Low);
-
+            poseData.position = _localAvatar.transform.position;
+            poseData.rotation = _localAvatar.transform.rotation;
+            _remoteAvatar.ApplyStreamData(poseData.PacketData.data);
+            _remoteAvatar.transform.SetPositionAndRotation(poseData.position, poseData.rotation);
+            //for (int i = 0; i < OvrAvatarEntity.StreamLODCount; ++i)
+            //{
+            //    _remoteAvatar.ApplyStreamData(_localAvatar.RecordStreamData((StreamLOD)i));
+            //}
+            //    //_remoteAvatar.ApplyStreamData(poseData.PacketData.data);
             SendPoseDataServerRPC(poseData);
         }
     }
+
+    //private void SetAvatarPositionAndForward(Vector3 position, Vector3 forward)
+    //{
+    //    _localAvatar.transform.localPosition = position;
+    //    _localAvatar.transform.forward = forward;
+    //    //_remoteAvatar.transform.SetPositionAndRotation(_localAvatar.transform.position, _localAvatar.transform.rotation);
+    //    //_remoteAvatar.transform.localPosition = position;
+    //    //_remoteAvatar.transform.forward = forward;
+
+    //    //_baseAvatarData.position = _remoteAvatar.transform.localPosition;
+    //    //_baseAvatarData.rotation = _remoteAvatar.transform.localRotation;
+
+    //    //SendBaseAvatarDataServerRpc(_baseAvatarData);
+    //}
 
     private void SetAvatarPositionAndForward(Vector3 position, Vector3 forward)
     {
         _localAvatar.transform.localPosition = position;
         _localAvatar.transform.forward = forward;
-        _remoteAvatar.transform.SetPositionAndRotation(_localAvatar.transform.position, _localAvatar.transform.rotation);
+        //_remoteAvatar.transform.SetPositionAndRotation(_localAvatar.transform.position, _localAvatar.transform.rotation);
+        //_remoteAvatar.transform.localPosition = position;
+        //_remoteAvatar.transform.forward = forward;
 
-        _baseAvatarData.position = _remoteAvatar.transform.localPosition;
-        _baseAvatarData.rotation = _remoteAvatar.transform.localRotation;
+        //_baseAvatarData.position = _remoteAvatar.transform.position;
+        //_baseAvatarData.rotation = _remoteAvatar.transform.rotation;
+
         SendBaseAvatarDataServerRpc(_baseAvatarData);
     }
 
-    private IEnumerator WaitingForTrackingPoseValid()
-    {
-        // Avatar will have default pose, rotation and position until HMD mounted (or in PC mode)
-        SetAvatarPositionAndForward(_localAvatar.transform.localPosition, -_localAvatar.transform.forward);
+    //private IEnumerator WaitingForTrackingPoseValid()
+    //{
+    //    // Avatar will have default pose, rotation and position until HMD mounted (or in PC mode)
+    //    //SetAvatarPositionAndForward(_localAvatar.transform.localPosition, _localAvatar.transform.forward);
 
-        while (!_localAvatar.TrackingPoseValid)
-        {
-            yield return null;
-            if (_localAvatar == null)
-            {
-                yield break;
-            }
-        }
-
-        SetAvatarPositionAndForward(Vector3.zero, -_localAvatar.transform.forward);
-    }
+    //    SendBaseAvatarDataServerRpc(_baseAvatarData);
+    //    while (!_localAvatar.TrackingPoseValid)
+    //    {
+    //        yield return null;
+    //        if (_localAvatar == null)
+    //        {
+    //            yield break;
+    //        }
+    //    }
+    //    SetAvatarPositionAndForward(Vector3.zero, _localAvatar.transform.parent.forward);
+    //}
 
     [ServerRpc]
     private void SendBaseAvatarDataServerRpc(BaseSerializableAvatarData baseAvatarData)
@@ -191,8 +250,8 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
         _baseAvatarData = baseAvatarData;
         LoadDefaultRemoteAvatar(_baseAvatarData.assetId);
-        _remoteAvatar.transform.localPosition = _baseAvatarData.position;
-        _remoteAvatar.transform.localRotation = _baseAvatarData.rotation;
+        //_remoteAvatar.transform.localPosition = _baseAvatarData.position;
+        //_remoteAvatar.transform.localRotation = _baseAvatarData.rotation;
     }
 
     [ServerRpc(Delivery = RpcDelivery.Unreliable)]
@@ -213,6 +272,7 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
         _poseAvatarData = poseData;
 
+        _remoteAvatar.transform.SetPositionAndRotation(poseData.position, poseData.rotation);
         if (_remoteAvatar.SkeletonJointCount == 0)
         {
             return;

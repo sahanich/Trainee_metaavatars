@@ -46,6 +46,8 @@ public class PacketData
 public class PoseSerializableAvatarData : INetworkSerializable
 {
     public PacketData PacketData;
+    public Vector3 position;
+    public Quaternion rotation;
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
@@ -63,6 +65,8 @@ public class PoseSerializableAvatarData : INetworkSerializable
     {
         byte[] avatarBytes = SerializeData();
         serializer.SerializeValue(ref avatarBytes);
+        serializer.SerializeValue(ref position);
+        serializer.SerializeValue(ref rotation);
     }
 
     private void DeserializeForNetwork<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -70,6 +74,9 @@ public class PoseSerializableAvatarData : INetworkSerializable
         byte[] avatarBytes = null;
         serializer.SerializeValue(ref avatarBytes);
         DeserializeData(avatarBytes);
+
+        serializer.SerializeValue(ref position);
+        serializer.SerializeValue(ref rotation);
     }
 
     public static PoseSerializableAvatarData Deserialize(byte[] data)
