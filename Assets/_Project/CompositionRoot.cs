@@ -4,7 +4,7 @@ using UnityEngine;
 public class CompositionRoot : MonoBehaviour
 {
     [SerializeField]
-    private LocalPlayerRoot LocalPlayerPrefab;
+    private LocalPlayerRoot LocalPlayer;
     [SerializeField]
     private NetworkStarter NetworkStarter;
     [SerializeField]
@@ -12,17 +12,7 @@ public class CompositionRoot : MonoBehaviour
     [SerializeField]
     private NonVrMovementSystem NonVrMovementSystem;
 
-    private LocalPlayerRoot _localPlayer;
     private NetworkPlayerEventsMediator _networkPlayerEventsMediator = new();
-
-
-//    private void Awake()
-//    {
-//#if UNITY_SERVER
-//        return;
-//#endif        
-//        _networkPlayerEventsMediator = new();
-//    }
 
     private void OnEnable()
     {
@@ -53,18 +43,18 @@ public class CompositionRoot : MonoBehaviour
 
     private void OnClientStarted()
     {
-        _localPlayer = PlayerSpawner.SpawnPlayer(LocalPlayerPrefab);
-        NonVrMovementSystem.Init(_localPlayer);
+        PlayerSpawner.SpawnPlayer(LocalPlayer);
+        NonVrMovementSystem.Init(LocalPlayer);
         NonVrMovementSystem.StartMovementControl();
     }
 
     private void OnLocalPlayerAvatarTransmitterSpawned(NetworkAvatarTransmitter networkAvatarTransmitter)
     {
-        networkAvatarTransmitter.Init(_localPlayer.LocalAvatarEntity, _localPlayer.AvatarAssetId);
+        networkAvatarTransmitter.Init(LocalPlayer.LocalAvatarEntity);
     }
 
     private void OnLocalPlayerPositionSynchronizerSpawned(NetworkPlayerPositionSynchronizer networkPlayerPositionSynchronizer)
     {
-        networkPlayerPositionSynchronizer.Init(_localPlayer.XrOrigin.transform);
+        networkPlayerPositionSynchronizer.Init(LocalPlayer.XrOrigin.transform);
     }
 }

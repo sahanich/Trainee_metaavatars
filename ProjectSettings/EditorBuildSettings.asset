@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/World 2.unity
     guid: 8f162e819ad9d234c94cd8b23b5efa95
+  - enabled: 1
+    path: Assets/Scenes/Network Avatar scene.unity
+    guid: 5a5d7519d5a6aa049bde6c0b8e31f8e1
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: eb89be6695c64be45877feab6cb5c36e,
       type: 2}

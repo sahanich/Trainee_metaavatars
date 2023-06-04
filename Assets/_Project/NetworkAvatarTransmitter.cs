@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Unity.Netcode;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using static Oculus.Avatar2.OvrAvatarEntity;
 
@@ -55,6 +56,12 @@ public class NetworkAvatarTransmitter : NetworkBehaviour
 
         SendBaseAvatarDataServerRpc(_baseAvatarData);
         StartCoroutine(AvatarDataTransmissionRoutine());
+    }
+
+    public void Init(SampleAvatarEntity localAvatar)
+    {
+        int assetId = UnityEngine.Random.Range(0, 32);
+        Init(localAvatar, assetId);
     }
 
     private IEnumerator AvatarDataTransmissionRoutine()

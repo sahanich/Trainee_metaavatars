@@ -9,6 +9,9 @@ public class LocalPlayerRoot : MonoBehaviour
     public XROrigin XrOrigin { get; private set; }
 
     [field: SerializeField]
+    public OVRCameraRig OVRCameraRig { get; private set; }
+
+    [field: SerializeField]
     public CharacterController CharacterController { get; private set; }
 
     [field: SerializeField]
@@ -28,9 +31,14 @@ public class LocalPlayerRoot : MonoBehaviour
         XrOrigin.transform.position = position;
     }
 
-    public void SetForward(Vector3 forward)
+    public void SetRotation(Quaternion rotation)
     {
-        XrOrigin.transform.forward = forward;
+        XrOrigin.transform.rotation = rotation;
+    }
+
+    public void SetActive(bool active)
+    {
+        OVRCameraRig.gameObject.SetActive(active);
     }
 
     private IEnumerator WaitingForTrackingPoseValid()
@@ -48,6 +56,5 @@ public class LocalPlayerRoot : MonoBehaviour
 
         LocalAvatarEntity.transform.localPosition = Vector3.zero;
         LocalAvatarEntity.transform.forward = -LocalAvatarEntity.transform.forward;
-        //SetAvatarPositionAndForward(Vector3.zero, -_localAvatar.transform.parent.forward);
     }
 }

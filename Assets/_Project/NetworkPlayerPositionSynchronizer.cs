@@ -11,11 +11,6 @@ public class NetworkPlayerPositionSynchronizer : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        //if (IsServer)
-        //{
-        //    return;
-        //}
-
         if (IsOwner)
         {
             LocalPlayerPositionSynchronizerSpawned?.Invoke(this);
