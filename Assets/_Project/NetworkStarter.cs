@@ -3,11 +3,16 @@ using Unity.Netcode.Transports.UTP;
 using Unity.Netcode;
 using UnityEngine;
 
-public class NetworkStarter : MonoBehaviour
+public class NetworkStarter : NetworkBehaviour
 {
     private const string SenseTowerSettingsPortKey = "Port";
-    private const int DefaultConnectionPort = 7790;
-    private const string DefaultConnectionIp = "127.0.0.1";
+
+    [SerializeField]
+    private ushort DefaultConnectionPort = 7790;
+    [SerializeField]
+    private string DefaultConnectionIp = "127.0.0.1";
+
+    public event Action ClientStarted;
 
     private void Awake()
     {
@@ -21,12 +26,7 @@ public class NetworkStarter : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        Init();
-    }
-
-    public void Init()
+    public void InitConnection()
     {
         NetworkManager.Singleton.NetworkConfig.EnableNetworkLogs = true;
 
@@ -34,30 +34,25 @@ public class NetworkStarter : MonoBehaviour
         transport.ConnectionData.Port = Port;
         transport.ConnectionData.Address = UnityServerIp;
 
-        if (IsServer)
+        if (IsUnityServer)
         {
             StartServer(transport);
         }
         else
         {
-            StartClient(transport);
+            StartClient();
         }
     }
 
-
-    private void StartClient(NetworkTransport transport)
+    private void StartClient()
     {
         Debug.Log($"Start client {UnityServerIp}:{Port}");
-        NetworkManager.Singleton.OnClientConnectedCallback += (x) => Debug.Log("connected " + x);
-        transport.OnTransportEvent += (eventType, clientId, payload, receiveTime) =>
-        {
-            if (eventType == NetworkEvent.Disconnect)
-            {
-                Debug.Log("Disconnected");
-            }
-        };
+
         var startResult = NetworkManager.Singleton.StartClient();
+        
         Debug.Log(startResult ? "Client opened successfully" : "Client opening failed");
+
+        ClientStarted?.Invoke();
     }
 
     private void StartServer(NetworkTransport transport)
@@ -83,7 +78,7 @@ public class NetworkStarter : MonoBehaviour
     {
         get
         {
-            return IsServer ? "0.0.0.0" : DefaultConnectionIp;
+            return IsUnityServer ? "0.0.0.0" : DefaultConnectionIp;
         }
     }
 
@@ -91,7 +86,7 @@ public class NetworkStarter : MonoBehaviour
     {
         get
         {
-            if (IsServer)
+            if (IsUnityServer)
             {
                 var port = Environment.GetEnvironmentVariable(SenseTowerSettingsPortKey);
                 if (ushort.TryParse(port, out var parsedPort))
@@ -104,7 +99,7 @@ public class NetworkStarter : MonoBehaviour
         }
     }
 
-    private static bool IsServer
+    private static bool IsUnityServer
     {
         get
         {
