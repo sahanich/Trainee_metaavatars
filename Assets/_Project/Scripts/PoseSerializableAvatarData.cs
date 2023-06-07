@@ -1,51 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Unity.Netcode;
 using UnityEngine;
-using static Oculus.Avatar2.OvrAvatarEntity;
-
-[Serializable]
-public class PacketData
-{
-    public byte[] data;
-    public StreamLOD lod;
-
-    public byte[] Serialize()
-    {
-        using (MemoryStream m = new MemoryStream())
-        {
-            using (BinaryWriter writer = new BinaryWriter(m))
-            {
-                writer.Write(data.Length);
-                writer.Write(data);
-                writer.Write((byte)lod);
-            }
-            return m.ToArray();
-        }
-    }
-
-    public static PacketData Deserialize(byte[] data)
-    {
-        PacketData result = new PacketData();
-
-        using (MemoryStream m = new MemoryStream(data))
-        {
-            using (BinaryReader reader = new BinaryReader(m))
-            {
-                int dataLength = reader.ReadInt32();
-                result.data = reader.ReadBytes(dataLength);
-                result.lod = (StreamLOD)reader.ReadByte();
-            }
-        }
-        return result;
-    }
-};
 
 [Serializable]
 public class PoseSerializableAvatarData : INetworkSerializable
 {
-    public PacketData PacketData;
+    public AvatarPacketData PacketData;
     public Vector3 position;
     public Quaternion rotation;
 
@@ -105,24 +66,8 @@ public class PoseSerializableAvatarData : INetworkSerializable
         {
             using (BinaryReader reader = new BinaryReader(m))
             {
-                PacketData = PacketData.Deserialize(data);
+                PacketData = AvatarPacketData.Deserialize(data);
             }
         }
-    }
-}
-
-public class BaseSerializableAvatarData : INetworkSerializable
-{
-    public Vector3 position;
-    public Quaternion rotation;
-    public int assetId;
-    public ulong userId;
-
-    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-    {
-        serializer.SerializeValue(ref position);
-        serializer.SerializeValue(ref rotation);
-        serializer.SerializeValue(ref assetId);
-        serializer.SerializeValue(ref userId);
     }
 }

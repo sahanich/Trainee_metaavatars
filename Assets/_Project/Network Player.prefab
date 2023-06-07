@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7678568894849410205}
-  - component: {fileID: 3445293118737214885}
   - component: {fileID: 7678568894849410207}
+  - component: {fileID: 3445293118737214885}
   - component: {fileID: 5845090489555421809}
   m_Layer: 0
   m_Name: Network Player
@@ -35,18 +35,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3445293118737214885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7678568894849410206}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 54b8ee899d8d03c49b186994665691c4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &7678568894849410207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,6 +54,18 @@ MonoBehaviour:
   SceneMigrationSynchronization: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &3445293118737214885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7678568894849410206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b8ee899d8d03c49b186994665691c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &5845090489555421809
 MonoBehaviour:
   m_ObjectHideFlags: 0

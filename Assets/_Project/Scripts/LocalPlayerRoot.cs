@@ -18,9 +18,6 @@ public class LocalPlayerRoot : MonoBehaviour
     public SampleAvatarEntity LocalAvatarEntity { get; private set; }
 
 
-    [field: SerializeField]
-    public int AvatarAssetId { get; private set; }
-
     private void Awake()
     {
         StartCoroutine(WaitingForTrackingPoseValid());

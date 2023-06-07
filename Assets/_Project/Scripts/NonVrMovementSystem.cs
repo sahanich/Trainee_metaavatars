@@ -8,7 +8,8 @@ namespace Assets.Scripts.Player.WindowsMovement
 {
     public class NonVrMovementSystem : MonoBehaviour
     {
-        [SerializeField, Range(1f, 3f)] private float _movementSpeed = 1.5f;
+        [SerializeField, Range(1f, 3f)] 
+        private float MovementSpeed = 1.5f;
 
         private Transform _cameraRig;
         private CharacterController _characterController;
@@ -16,7 +17,6 @@ namespace Assets.Scripts.Player.WindowsMovement
         private float _vertical;
         private float _horizontal;
         private float xRot;
-        //private TrackedPoseDriver _trackedCamera;
 
         public void Init(LocalPlayerRoot localPlayer)
         {
@@ -45,52 +45,13 @@ namespace Assets.Scripts.Player.WindowsMovement
 
         }
 
-//        void Start()
-//        {
-//#if UNITY_STANDALONE_WIN || UNITY_EDITOR
-//            //_networkObject = GetComponent<NetworkObject>();
-//            _characterController = GetComponent<CharacterController>();
-//            //_characterController.enabled = true;
-//            //_trackedCamera = _cameraRig.GetComponent<TrackedPoseDriver>();
-//#endif
-//        }
-
-//        void Update()
-//        {
-////#if UNITY_STANDALONE_WIN || UNITY_EDITOR
-//            //if (!_networkObject.IsOwner) return;
-//            if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
-//            {
-//                //_trackedCamera.enabled = true;
-//            }
-//            else
-//            {
-//                //_trackedCamera.enabled = false;
-//                DoMovement();
-//                DoRotate();
-//            }
-////#endif
-//        }
-
-//        public void SetPosition(Vector3 position, Quaternion rotation)
-//        {
-//#if UNITY_STANDALONE_WIN || UNITY_EDITOR
-//            if (_characterController != null)
-//                _characterController.enabled = false;
-//            transform.position = position;
-//            transform.rotation = rotation;
-//            if (_characterController != null)
-//                _characterController.enabled = true;
-//#endif
-//        }
-
         private Vector3 DirectionCalculation()
         {
             _horizontal = Input.GetAxis("Horizontal");
             _vertical = Input.GetAxis("Vertical");
 
-            Vector3 direction = _characterController.transform.right * _horizontal * _movementSpeed +
-                                _characterController.transform.forward * _vertical * _movementSpeed;
+            Vector3 direction = _characterController.transform.right * _horizontal * MovementSpeed +
+                                _characterController.transform.forward * _vertical * MovementSpeed;
             if (Input.GetKey(KeyCode.LeftShift)) direction = direction * 3;
             return direction;
         }
